@@ -318,13 +318,13 @@ function bombSvg(chocId, decorId) {
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem('bomb-cart-2') || '[]'); } catch (e) {}
 const saveCart = () => { try { localStorage.setItem('bomb-cart-2', JSON.stringify(cart)); } catch (e) {} };
-const tg = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) ? window.Telegram.WebApp : null;
+const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 if (tg) { tg.ready(); tg.expand(); }
 
 let tab = 'about';
 let build = {size: 4, items: [], choc: 'dark', decor: 'plain'};
 let single = {choc: 'dark', decor: 'plain', qty: 1};
-let form = {name: tg && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name || '' : '', contact: 'telegram', tg: tg && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username ? '@' + tg.initDataUnsafe.user.username : '', phone: '', date: '', comment: ''};
+let form = {name: (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.first_name || '' : '', contact: 'telegram', tg: tg && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username ? '@' + tg.initDataUnsafe.user.username : '', phone: '', date: '', comment: ''};
 let errors = {};
 let placed = null, placedMode = 'demo', sending = false;
 
@@ -492,7 +492,11 @@ function submitOrder() {
     return;
   }
   const o = orderPayload();
-  if (tg) { tg.sendData(JSON.stringify(o)); return; }
+  if (tg) {
+    try { tg.sendData(JSON.stringify(o)); }
+    catch (err) { toast('Не удалось отправить заказ. Попробуйте ещё раз'); }
+    return;
+  }
   if (!ORDER_URL) { placed = orderText(o); placedMode = 'demo'; cart = []; saveCart(); render(); return; }
   if (sending) return;
   sending = true; const btn = document.querySelector('[data-act="order"]'); if (btn) btn.disabled = true;
