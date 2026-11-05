@@ -379,6 +379,9 @@ function bombSvg(chocId, decorId) {
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem('bomb-cart-2') || '[]'); } catch (e) {}
 const saveCart = () => { try { localStorage.setItem('bomb-cart-2', JSON.stringify(cart)); } catch (e) {} };
+let orderHistory = [];
+try { orderHistory = JSON.parse(localStorage.getItem('bomb-orders') || '[]'); } catch (e) {}
+const saveOrder = (o) => { try { orderHistory.unshift({date: new Date().toLocaleString('ru-RU', {dateStyle: 'short', timeStyle: 'short'}), total: o.total, items: o.items.map(i => i.t + ' × ' + i.q)}); orderHistory = orderHistory.slice(0, 50); localStorage.setItem('bomb-orders', JSON.stringify(orderHistory)); } catch (e) {} };
 const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 if (tg) { tg.ready(); tg.expand(); }
 
@@ -486,15 +489,19 @@ function viewSingle() {
 
 const cartTotal = () => cart.reduce((s,c) => s + c.price * c.qty, 0);
 
+function histHtml() {
+  if (!orderHistory.length) return '';
+  return `<h3 style="font-size:15px;margin:8px 0">Мои заказы</h3>` + orderHistory.map(h => `<div class="card" style="margin-bottom:10px"><div class="sub">${h.date}</div><div>${h.items.join(', ')}</div><div class="price" style="margin-top:6px">${fmt(h.total)}</div></div>`).join('');
+}
 function viewCart() {
   if (placed) return `<h2>Заказ оформлен</h2>
     <div class="card" style="display:flex;flex-direction:column;gap:10px">
       <p style="margin:0">${placedMode === 'sent' ? 'Заказ отправлен.' : 'Это демо-версия: заказ никуда не отправлен.'} После оформления заказа с Вами свяжется наш менеджер. Спасибо за ваш заказ 🤎</p>
       <pre class="ordertext">${placed}</pre>
       <button class="btn ghost block" data-act="reset">Вернуться в каталог</button></div>`;
-  if (!cart.length) return `<h2>Корзина</h2><div class="card empty"><p class="lead" style="margin:0">Пока пусто. Выберите готовый набор или соберите свой.</p><button class="btn" data-act="tab" data-v="ready">К наборам</button></div>`;
+  if (!cart.length) return `<h2>Корзина</h2>${histHtml()}<div class="card empty"><p class="lead" style="margin:0">Пока пусто. Выберите готовый набор или соберите свой.</p><button class="btn" data-act="tab" data-v="ready">К наборам</button></div>`;
   const today = new Date().toISOString().slice(0, 10);
-  return `<h2>Корзина</h2>
+  return `<h2>Корзина</h2>${histHtml()}
     <div class="card" style="display:flex;flex-direction:column;gap:14px">${cart.map((c, i) => `<div class="row top-a">
       ${c.svg ? `<span class="thumb">${thumbHtml(c.svg[0], c.svg[1])}</span>` : c.photo && PHOTOS[c.photo] ? `<img class="thumb" src="${PHOTOS[c.photo]}" alt="">` : ''}
       <div class="grow"><div class="name">${c.title}</div><div class="sub">${c.desc}</div><div class="price" style="margin-top:6px">${fmt(c.price * c.qty)}</div></div>
@@ -507,12 +514,12 @@ function viewCart() {
       <div class="field"><label for="f-name" class="sub">Имя</label><input id="f-name" autocomplete="name" value="${form.name}"><p class="err" id="e-name">${errors.name || ''}</p></div>
       <div><p class="lbl">Как с вами связаться</p><div class="seg" role="group" aria-label="Способ связи"><button data-act="contact" data-v="telegram" aria-pressed="${form.contact === 'telegram'}">Telegram</button><button data-act="contact" data-v="phone" aria-pressed="${form.contact === 'phone'}">Телефон</button></div></div>
       ${form.contact === 'telegram'
-        ? `<div class="field"><label for="f-tg" class="sub">Ваш ник в Telegram</label><input id="f-tg" autocomplete="off" autocapitalize="off" placeholder="@username" value="${form.tg}"><p class="err" id="e-contact">${errors.contact || ''}</p></div>`
+        ? `<p class="sub" style="margin:0">Пожалуйста, укажите номер телефона при закрытом аккаунте для того, чтобы мы смогли связаться.</p>`
         : `<div class="field"><label for="f-phone" class="sub">Номер телефона</label><input id="f-phone" type="tel" autocomplete="tel" placeholder="+375 ..." value="${form.phone}"><p class="err" id="e-contact">${errors.contact || ''}</p></div>`}
       <div class="field"><label for="f-date" class="sub">Желаемая дата</label><input id="f-date" type="date" min="${today}" value="${form.date}"></div>
-      <div class="field"><label for="f-comment" class="sub">Комментарий</label><textarea id="f-comment" placeholder="Например, надпись на открытке">${form.comment}</textarea></div>
+      <div class="field"><label for="f-comment" class="sub">Комментарий</label><textarea id="f-comment" placeholder="Например, поменять наполнение">${form.comment}</textarea></div>
       <button class="btn block" data-act="order">Оформить заказ · ${fmt(cartTotal())}</button>
-      <p class="sub" style="margin:0;text-align:center">После оформления заказа с Вами свяжется наш менеджер. Спасибо за ваш заказ 🤎</p>
+      <p class="sub" style="margin:0;text-align:center">После оформления заказа с Вами свяжется наш менеджер. Спасибо за Ваш заказ 🤎</p>
     </div>`;
 }
 
@@ -545,7 +552,7 @@ function orderText(o) {
 function submitOrder() {
   errors = {};
   if (!form.name.trim()) errors.name = 'Укажите имя';
-  if (form.contact === 'telegram') { if (!/^@?[A-Za-z0-9_]{5,32}$/.test(form.tg.trim())) errors.contact = 'Укажите ник в Telegram, например @anna_by'; }
+  if (form.contact === 'telegram') { }
   else if (form.phone.replace(/\D/g, '').length < 10) errors.contact = 'Укажите номер телефона полностью';
   if (Object.keys(errors).length) {
     ['name', 'contact'].forEach(k => { const e = $('#e-' + k); if (e) e.textContent = errors[k] || ''; });
@@ -553,6 +560,7 @@ function submitOrder() {
     return;
   }
   const o = orderPayload();
+  saveOrder(o);
   if (tg) {
     try { tg.sendData(JSON.stringify(o)); }
     catch (err) { toast('Не удалось отправить заказ. Попробуйте ещё раз'); }
