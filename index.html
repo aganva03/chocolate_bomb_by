@@ -389,7 +389,8 @@ if (tg) { tg.ready(); tg.expand(); }
 let tab = 'about';
 let build = {size: 4, items: [], choc: 'dark', decor: 'plain'};
 let single = {choc: 'dark', decor: 'plain', qty: 1};
-let form = {name: (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.first_name || '' : '', contact: 'telegram', tg: tg && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username ? '@' + tg.initDataUnsafe.user.username : '', phone: '', date: '', comment: ''};
+const IG = new URLSearchParams(location.search).get('src') === 'ig';
+let form = {ig: '', name: (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.first_name || '' : '', contact: IG ? 'phone' : 'telegram', tg: tg && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username ? '@' + tg.initDataUnsafe.user.username : '', phone: '', date: '', comment: ''};
 let errors = {};
 let placed = null, placedMode = 'demo', sending = false;
 
@@ -513,7 +514,8 @@ function viewCart() {
       <h3 style="font-size:15px">Оформление</h3>
       <p class="sub" style="margin:0">Получение: самовывоз. Детали подтвердит менеджер.</p>
       <div class="field"><label for="f-name" class="sub">Имя</label><input id="f-name" autocomplete="name" value="${form.name}"><p class="err" id="e-name">${errors.name || ''}</p></div>
-      <div><p class="lbl">Как с вами связаться</p><div class="seg" role="group" aria-label="Способ связи"><button data-act="contact" data-v="telegram" aria-pressed="${form.contact === 'telegram'}">Telegram</button><button data-act="contact" data-v="phone" aria-pressed="${form.contact === 'phone'}">Телефон</button></div></div>
+      <div><p class="lbl">Как с вами связаться</p><div class="seg" role="group" aria-label="Способ связи">${IG ? '' : `<button data-act="contact" data-v="telegram" aria-pressed="${form.contact === 'telegram'}">Telegram</button>`}<button data-act="contact" data-v="phone" aria-pressed="${form.contact === 'phone'}">Телефон</button></div></div>
+      ${IG ? `<div class="field"><label for="f-ig" class="sub">Ваш ник в Instagram</label><input id="f-ig" autocomplete="off" autocapitalize="off" placeholder="@username" value="${form.ig}"></div>` : ''}
       ${form.contact === 'telegram'
         ? `<p class="sub" style="margin:0">Пожалуйста, укажите номер телефона при закрытом аккаунте для того, чтобы мы смогли связаться.</p>`
         : `<div class="field"><label for="f-phone" class="sub">Номер телефона</label><input id="f-phone" type="tel" autocomplete="tel" placeholder="+375 ..." value="${form.phone}"><p class="err" id="e-contact">${errors.contact || ''}</p></div>`}
@@ -538,7 +540,7 @@ function render(keepScroll) {
 /* ========= Заказ ========= */
 function orderPayload() {
   return {
-    name: form.name.trim(), contact: form.contact === 'telegram' ? {m: 'telegram', v: '@' + form.tg.trim().replace(/^@/, '')} : {m: 'phone', v: form.phone.trim()}, delivery: 'pickup', date: form.date, comment: form.comment.trim(),
+    name: form.name.trim(), contact: form.contact === 'telegram' ? {m: 'telegram', v: '@' + form.tg.trim().replace(/^@/, '')} : {m: 'phone', v: form.phone.trim()}, delivery: 'pickup', source: IG ? 'instagram' : 'web', ig: IG ? form.ig.trim().replace(/^@/, '') : '', date: form.date, comment: form.comment.trim(),
     items: cart.map(c => ({t: c.title, d: c.desc, q: c.qty, p: c.price})), total: cartTotal()
   };
 }
@@ -553,7 +555,8 @@ function orderText(o) {
 function submitOrder() {
   errors = {};
   if (!form.name.trim()) errors.name = 'Укажите имя';
-  if (form.contact === 'telegram') { }
+  if (IG && !/^@?[A-Za-z0-9._]{1,30}$/.test(form.ig.trim())) errors.contact = 'Укажите ник в Instagram';
+  else if (form.contact === 'telegram') { }
   else if (form.phone.replace(/\D/g, '').length < 10) errors.contact = 'Укажите номер телефона полностью';
   if (Object.keys(errors).length) {
     ['name', 'contact'].forEach(k => { const e = $('#e-' + k); if (e) e.textContent = errors[k] || ''; });
@@ -619,7 +622,7 @@ document.addEventListener('click', e => {
   if (a === 'reset') { placed = null; tab = 'ready'; render(); }
 });
 document.addEventListener('input', e => {
-  const m = {'f-name': 'name', 'f-tg': 'tg', 'f-phone': 'phone', 'f-date': 'date', 'f-comment': 'comment'}[e.target.id];
+  const m = {'f-ig': 'ig', 'f-name': 'name', 'f-tg': 'tg', 'f-phone': 'phone', 'f-date': 'date', 'f-comment': 'comment'}[e.target.id];
   if (m) form[m] = e.target.value;
 });
 
