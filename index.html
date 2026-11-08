@@ -514,7 +514,7 @@ function viewCart() {
       <h3 style="font-size:15px">Оформление</h3>
       <p class="sub" style="margin:0">Получение: самовывоз. Детали подтвердит менеджер.</p>
       <div class="field"><label for="f-name" class="sub">Имя</label><input id="f-name" autocomplete="name" value="${form.name}"><p class="err" id="e-name">${errors.name || ''}</p></div>
-      <div><p class="lbl">Как с вами связаться</p><div class="seg" role="group" aria-label="Способ связи">${IG ? '' : `<button data-act="contact" data-v="telegram" aria-pressed="${form.contact === 'telegram'}">Telegram</button>`}<button data-act="contact" data-v="phone" aria-pressed="${form.contact === 'phone'}">Телефон</button></div></div>
+      <div><p class="lbl">Как с вами связаться</p>${IG ? '' : `<div class="seg" role="group" aria-label="Способ связи"><button data-act="contact" data-v="telegram" aria-pressed="${form.contact === 'telegram'}">Telegram</button><button data-act="contact" data-v="phone" aria-pressed="${form.contact === 'phone'}">Телефон</button></div>`}</div>
       ${IG ? `<div class="field"><label for="f-ig" class="sub">Ваш ник в Instagram</label><input id="f-ig" autocomplete="off" autocapitalize="off" placeholder="@username" value="${form.ig}"></div>` : ''}
       ${form.contact === 'telegram'
         ? `<p class="sub" style="margin:0">Пожалуйста, укажите номер телефона при закрытом аккаунте для того, чтобы мы смогли связаться.</p>`
