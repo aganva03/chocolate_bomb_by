@@ -171,7 +171,8 @@ span.thumb{display:block;background:var(--soft);overflow:hidden}
 const CUR = 'Br';
 const ORDER_URL = '';                   // адрес приёма заказов для версии из браузера и Instagram, например 'https://ваш-сервер/order'
 const INSTAGRAM = '';                   // например 'chocolate_bomb.by'; пока пусто, ссылка не показывается
-const BOX_FEE = 3;                      // коробка: так сходятся цены ваших готовых наборов
+const BOX_FEE = 3;                      // коробка по умолчанию
+const boxFee = (n) => n <= 2 ? 3 : n <= 4 ? 4 : 5;   // 1–2 шт — 3 Br, 3–4 шт — 4 Br, 5–9 шт — 5 Br
 const SIZES = [1, 2, 3, 4, 6, 9];       // размеры коробок в конструкторе набора
 
 // Цена одной бомбочки зависит от шоколада. Украшение входит в цену.
@@ -203,20 +204,20 @@ const DECOR = [
 ];
 // Готовые наборы из фото: название, описание, размер коробки и цена правятся здесь.
 const READY = [
-  {id:'s1', name:'Белый шоколад', box:6, price:52, desc:'Классический белый шоколад с четырьмя видами украшений.'},
-  {id:'s2', name:'Тёмный праздничный', box:6, price:46, desc:'Тёмный шоколад с ёлочками, сердечками, мини-маршмеллоу и кокосом.'},
-  {id:'s3', name:'Белый и тёмный', box:4, price:33, desc:'Два белых и два тёмных. Малиновая крошка и кокос.'},
-  {id:'s4', name:'Тёмная классика', box:4, price:31, desc:'Тёмный шоколад, два в глянце и два с белой пудрой.'},
+  {id:'s1', name:'Белое наслаждение', box:6, price:54, desc:'Белый шоколад с украшением малина, сердечки, шоколад, классика и кокос.'},
+  {id:'s2', name:'Тёмное удовольствие', box:6, price:48, desc:'Тёмный шоколад с украшением ёлочки, маршмеллоу, сердечки, малина и кокос.'},
+  {id:'s3', name:'День и ночь', box:4, price:34, desc:'Две белых и две тёмных с украшением карамель и raffaello.'},
+  {id:'s4', name:'Тёмная классика', box:4, price:32, desc:'Тёмный шоколад, два стандарт и два снежка.'},
   {id:'s5', name:'Для двоих', box:2, price:17, desc:'Белая с розовыми сердечками и тёмная с сеточкой.'},
-  {id:'s6', name:'Нежный', box:6, price:52, desc:'Розовый, белый и тёмный шоколад с сердечками и маршмеллоу.'},
-  {id:'s7', name:'Тёмный с ягодами', box:6, price:45, desc:'Тёмный шоколад с малиной, кокосом и сердечками.'},
+  {id:'s6', name:'Микс трио', box:6, price:54, desc:'Розовый, белый и тёмный шоколад с сердечками, кокос, маршмеллоу и шоколад.'},
+  {id:'s7', name:'Тёмный трио', box:6, price:47, desc:'Тёмный шоколад с карамелью, кокосом и сердечками.'},
   {id:'s8', name:'Малина и кокос', box:2, price:17, desc:'Две тёмные бомбочки: с малиной и с кокосом.'},
-  {id:'s9', name:'Тёмный микс', box:6, price:45, desc:'Шесть тёмных с миндалём, малиной, кокосом, безе и маршмеллоу.'},
-  {id:'s10', name:'Розовый руби', box:4, price:39, desc:'Четыре розовые бомбочки с сердечками и посыпкой.'},
-  {id:'s11', name:'Руби и белый', box:6, price:55, desc:'Розовый руби и белый шоколад, разные украшения.'},
-  {id:'s12', name:'Микс на четверых', box:4, price:35, desc:'Белые, розовая и тёмная с красными сердечками.'},
-  {id:'s13', name:'Тёмные с сердечками', box:2, price:17, desc:'Тёмный шоколад с белыми сердечками и кокосом.'},
-  {id:'s14', name:'Тёмные с сердечками', box:4, price:31, desc:'Кокос и красно-белые сердечки на тёмном шоколаде.'}
+  {id:'s9', name:'Тёмный микс', box:6, price:47, desc:'Шесть тёмных с миндалём, малиной, кокосом, безе и маршмеллоу.'},
+  {id:'s10', name:'Розовый микс', box:4, price:40, desc:'Четыре розовые бомбочки с сердечками и посыпкой.'},
+  {id:'s11', name:'Белый и розовый', box:6, price:57, desc:'Розовый и белый шоколад, raffaello, сердечки, розовое конфетти.'},
+  {id:'s12', name:'Микс на четверых', box:4, price:36, desc:'Белые, розовая и тёмная с сердечками, воздушным рисом и маршмеллоу.'},
+  {id:'s13', name:'Тёмный дуо', box:2, price:17, desc:'Тёмный шоколад с белыми сердечками и кокосом.'},
+  {id:'s14', name:'Кокос и сердечки', box:4, price:32, desc:'Кокос и красно-белые сердечки на тёмном шоколаде.'}
 ];
 
 /* ========= Фото ========= */
@@ -455,7 +456,7 @@ function picker(t, st) {
 
 function viewBuild() {
   const cnt = sum(build.items.map(i => i.n)), size = build.size, full = cnt === size;
-  const total = sum(build.items.map(i => chocOf(i.choc).price * i.n)) + BOX_FEE;
+  const total = sum(build.items.map(i => chocOf(i.choc).price * i.n)) + boxFee(build.size);
   const list = build.items.length ? build.items.map((it, k) => `<div class="row">
       <span class="thumb">${thumbHtml(it.choc, it.decor)}</span>
       <div class="grow"><div class="name">${chocOf(it.choc).name} шоколад</div><div class="sub">${decOf(it.decor).name} · ${fmt(chocOf(it.choc).price)}</div></div>
@@ -467,7 +468,7 @@ function viewBuild() {
     ${picker('build', build)}
     <div class="dock">
       <button class="btn ghost block" data-act="b-add" ${full ? 'disabled' : ''}>${full ? 'Коробка заполнена' : 'Добавить в коробку: ' + bombLabel(build.choc, build.decor)}</button>
-      <div class="row"><span><b>${cnt}</b> из ${size}</span><span class="sub">Коробка ${fmt(BOX_FEE)}</span><span class="price">${fmt(total)}</span></div>
+      <div class="row"><span><b>${cnt}</b> из ${size}</span><span class="sub">Коробка ${fmt(boxFee(size))}</span><span class="price">${fmt(total)}</span></div>
       <div class="bar"><i style="width:${cnt / size * 100}%"></i></div>
       <button class="btn block" data-act="add-build" ${full ? '' : 'disabled'}>${full ? 'Добавить набор в корзину' : 'Выберите ещё ' + (size - cnt)}</button>
     </div>`;
@@ -597,7 +598,7 @@ document.addEventListener('click', e => {
   if (a === 'add-build') {
     const its = build.items, first = its[0];
     const desc = its.map(x => bombLabel(x.choc, x.decor) + ' ×' + x.n).join('; ');
-    const price = sum(its.map(x => chocOf(x.choc).price * x.n)) + BOX_FEE;
+    const price = sum(its.map(x => chocOf(x.choc).price * x.n)) + boxFee(build.size);
     addToCart({key: 'b:' + build.size + JSON.stringify(its), title: 'Свой набор на ' + build.size, desc, price, qty: 1, svg: [first.choc, first.decor]});
     build.items = []; render(true); return;
   }
