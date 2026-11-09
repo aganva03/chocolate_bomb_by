@@ -502,7 +502,8 @@ function viewCart() {
       <pre class="ordertext">${placed}</pre>
       <button class="btn ghost block" data-act="reset">Вернуться в каталог</button></div>`;
   if (!cart.length) return `<h2>Корзина</h2>${histHtml()}<div class="card empty"><p class="lead" style="margin:0">Пока пусто. Выберите готовый набор или соберите свой.</p><button class="btn" data-act="tab" data-v="ready">К наборам</button></div>`;
-  const today = new Date().toISOString().slice(0, 10);
+  const _d = new Date(); _d.setDate(_d.getDate() + 1);
+  const today = _d.getFullYear() + '-' + String(_d.getMonth() + 1).padStart(2, '0') + '-' + String(_d.getDate()).padStart(2, '0');
   return `<h2>Корзина</h2>${histHtml()}
     <div class="card" style="display:flex;flex-direction:column;gap:14px">${cart.map((c, i) => `<div class="row top-a">
       ${c.svg ? `<span class="thumb">${thumbHtml(c.svg[0], c.svg[1])}</span>` : c.photo && PHOTOS[c.photo] ? `<img class="thumb" src="${PHOTOS[c.photo]}" alt="">` : ''}
@@ -555,6 +556,7 @@ function orderText(o) {
 function submitOrder() {
   errors = {};
   if (!form.name.trim()) errors.name = 'Укажите имя';
+  if (form.date && form.date < (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); })()) { toast('Выберите дату не раньше завтрашнего дня'); return; }
   if (IG && !/^@?[A-Za-z0-9._]{1,30}$/.test(form.ig.trim())) errors.contact = 'Укажите ник в Instagram';
   else if (form.contact === 'telegram') { }
   else if (form.phone.replace(/\D/g, '').length < 10) errors.contact = 'Укажите номер телефона полностью';
