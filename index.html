@@ -519,7 +519,7 @@ function viewCart() {
       ${IG ? `<div class="field"><label for="f-ig" class="sub">Ваш ник в Instagram</label><input id="f-ig" autocomplete="off" autocapitalize="off" placeholder="@username" value="${form.ig}"></div>` : ''}
       ${form.contact === 'telegram'
         ? `<p class="sub" style="margin:0">Пожалуйста, укажите номер телефона при закрытом аккаунте для того, чтобы мы смогли связаться.</p>`
-        : `<div class="field"><label for="f-phone" class="sub">Номер телефона</label><input id="f-phone" type="tel" autocomplete="tel" placeholder="+375 ..." value="${form.phone}"><p class="err" id="e-contact">${errors.contact || ''}</p></div>`}
+        : `<div class="field"><label for="f-phone" class="sub">Номер телефона</label><input id="f-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="+375 29 1234567" value="${form.phone}"><p class="err" id="e-contact">${errors.contact || ''}</p></div>`}
       <div class="field"><label for="f-date" class="sub">Желаемая дата</label><input id="f-date" type="date" min="${today}" value="${form.date}"></div>
       <div class="field"><label for="f-comment" class="sub">Комментарий</label><textarea id="f-comment" placeholder="Например, поменять наполнение">${form.comment}</textarea></div>
       <button class="btn block" data-act="order">Оформить заказ · ${fmt(cartTotal())}</button>
@@ -559,7 +559,7 @@ function submitOrder() {
   if (form.date && form.date < (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); })()) { toast('Выберите дату не раньше завтрашнего дня'); return; }
   if (IG && !/^@?[A-Za-z0-9._]{1,30}$/.test(form.ig.trim())) errors.contact = 'Укажите ник в Instagram';
   else if (form.contact === 'telegram') { }
-  else if (form.phone.replace(/\D/g, '').length < 10) errors.contact = 'Укажите номер телефона полностью';
+  else if (!/^\+?375(25|29|33|44)\d{7}$/.test(form.phone.replace(/[\s()-]/g, ''))) errors.contact = 'Номер: +375 и код 25, 29, 33 или 44, затем 7 цифр';
   if (Object.keys(errors).length) {
     ['name', 'contact'].forEach(k => { const e = $('#e-' + k); if (e) e.textContent = errors[k] || ''; });
     const first = document.querySelector('.err:not(:empty)'); if (first) first.scrollIntoView({block: 'center', behavior: 'smooth'});
@@ -625,6 +625,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('input', e => {
   const m = {'f-ig': 'ig', 'f-name': 'name', 'f-tg': 'tg', 'f-phone': 'phone', 'f-date': 'date', 'f-comment': 'comment'}[e.target.id];
+  if (m === 'phone') { let v = e.target.value.replace(/[^\d+]/g, ''); v = (v.startsWith('+') ? '+' : '') + v.replace(/\+/g, '').slice(0, 12); e.target.value = v; }
   if (m) form[m] = e.target.value;
 });
 
