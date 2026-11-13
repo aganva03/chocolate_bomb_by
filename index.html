@@ -170,7 +170,7 @@ span.thumb{display:block;background:var(--soft);overflow:hidden}
 <script>
 /* ========= Настройки магазина: правьте цены и состав здесь ========= */
 const CUR = 'Br';
-const ORDER_URL = '';                   // адрес приёма заказов для версии из браузера и Instagram, например 'https://ваш-сервер/order'
+const ORDER_URL = 'https://script.google.com/macros/s/AKfycbx5FZqC6MvUoOp-M7Pt9OdV1rbMIdbgcnJOHPVKprcPrERn0tw0OymiZcZPP9KbaHXM6A/exec';                   // адрес приёма заказов для версии из браузера и Instagram, например 'https://ваш-сервер/order'
 const INSTAGRAM = '';                   // например 'chocolate_bomb.by'; пока пусто, ссылка не показывается
 const BOX_FEE = 3;                      // коробка по умолчанию
 const boxFee = (n) => n <= 2 ? 3 : n <= 4 ? 4 : 5;   // 1–2 шт — 3 Br, 3–4 шт — 4 Br, 5–9 шт — 5 Br
@@ -391,7 +391,7 @@ let tab = 'about';
 let build = {size: 4, items: [], choc: 'dark', decor: 'plain'};
 let single = {choc: 'dark', decor: 'plain', qty: 1};
 const IG = new URLSearchParams(location.search).get('src') === 'ig';
-let form = {ig: '', name: (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.first_name || '' : '', contact: IG ? 'phone' : 'telegram', tg: tg && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username ? '@' + tg.initDataUnsafe.user.username : '', phone: '', date: '', comment: ''};
+let form = {ig: '', name: (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.first_name || '' : '', contact: (IG || !tg) ? 'phone' : 'telegram', tg: tg && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username ? '@' + tg.initDataUnsafe.user.username : '', phone: '', date: '', comment: ''};
 let errors = {};
 let placed = null, placedMode = 'demo', sending = false;
 
@@ -516,7 +516,7 @@ function viewCart() {
       <h3 style="font-size:15px">Оформление</h3>
       <p class="sub" style="margin:0">Получение: самовывоз. Детали подтвердит менеджер.</p>
       <div class="field"><label for="f-name" class="sub">Имя</label><input id="f-name" autocomplete="name" value="${form.name}"><p class="err" id="e-name">${errors.name || ''}</p></div>
-      <div><p class="lbl">Как с вами связаться</p>${IG ? '' : `<div class="seg" role="group" aria-label="Способ связи"><button data-act="contact" data-v="telegram" aria-pressed="${form.contact === 'telegram'}">Telegram</button><button data-act="contact" data-v="phone" aria-pressed="${form.contact === 'phone'}">Телефон</button></div>`}</div>
+      <div><p class="lbl">Как с вами связаться</p>${(IG || !tg) ? '' : `<div class="seg" role="group" aria-label="Способ связи"><button data-act="contact" data-v="telegram" aria-pressed="${form.contact === 'telegram'}">Telegram</button><button data-act="contact" data-v="phone" aria-pressed="${form.contact === 'phone'}">Телефон</button></div>`}</div>
       ${IG ? `<div class="field"><label for="f-ig" class="sub">Ваш ник в Instagram</label><input id="f-ig" autocomplete="off" autocapitalize="off" placeholder="@username" value="${form.ig}"></div>` : ''}
       ${form.contact === 'telegram'
         ? `<p class="sub" style="margin:0">Пожалуйста, укажите номер телефона при закрытом аккаунте для того, чтобы мы смогли связаться.</p>`
@@ -576,8 +576,8 @@ function submitOrder() {
   if (!ORDER_URL) { placed = orderText(o); placedMode = 'demo'; cart = []; saveCart(); render(); return; }
   if (sending) return;
   sending = true; const btn = document.querySelector('[data-act="order"]'); if (btn) btn.disabled = true;
-  fetch(ORDER_URL, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(o)})
-    .then(r => { if (!r.ok) throw new Error(r.status); placed = orderText(o); placedMode = 'sent'; cart = []; saveCart(); })
+  fetch(ORDER_URL, {method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify(o)})
+    .then(() => { placed = orderText(o); placedMode = 'sent'; cart = []; saveCart(); })
     .catch(() => toast('Не удалось отправить заказ. Попробуйте ещё раз'))
     .finally(() => { sending = false; render(true); });
 }
