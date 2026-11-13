@@ -81,6 +81,7 @@ h2{font-size:17px}
 
 .field{display:flex;flex-direction:column;gap:6px}
 .field input,.field textarea{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 12px;width:100%}
+.field input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;box-sizing:border-box;min-height:44px}
 .field textarea{min-height:72px;resize:vertical}
 .err{color:var(--err);font-size:13px;margin:0;min-height:1em}
 .total{display:flex;justify-content:space-between;align-items:baseline}
@@ -382,7 +383,7 @@ try { cart = JSON.parse(localStorage.getItem('bomb-cart-2') || '[]'); } catch (e
 const saveCart = () => { try { localStorage.setItem('bomb-cart-2', JSON.stringify(cart)); } catch (e) {} };
 let orderHistory = [];
 try { orderHistory = JSON.parse(localStorage.getItem('bomb-orders') || '[]'); } catch (e) {}
-const saveOrder = (o) => { try { orderHistory.unshift({date: new Date().toLocaleString('ru-RU', {dateStyle: 'short', timeStyle: 'short'}), total: o.total, items: o.items.map(i => i.t + ' × ' + i.q)}); orderHistory = orderHistory.slice(0, 50); localStorage.setItem('bomb-orders', JSON.stringify(orderHistory)); } catch (e) {} };
+const saveOrder = (o) => { try { orderHistory.unshift({date: new Date().toLocaleString('ru-RU', {dateStyle: 'short', timeStyle: 'short'}), total: o.total, items: o.items.map(i => i.t + ' × ' + i.q), snap: cart.map(c => ({title: c.title, desc: c.desc, price: c.price, qty: c.qty, key: c.key, svg: c.svg, photo: c.photo}))}); orderHistory = orderHistory.slice(0, 50); localStorage.setItem('bomb-orders', JSON.stringify(orderHistory)); } catch (e) {} };
 const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 if (tg) { tg.ready(); tg.expand(); }
 
@@ -493,7 +494,7 @@ const cartTotal = () => cart.reduce((s,c) => s + c.price * c.qty, 0);
 
 function histHtml() {
   if (!orderHistory.length) return '';
-  return `<h3 style="font-size:15px;margin:8px 0">Мои заказы</h3>` + orderHistory.map(h => `<div class="card" style="margin-bottom:10px"><div class="sub">${h.date}</div><div>${h.items.join(', ')}</div><div class="price" style="margin-top:6px">${fmt(h.total)}</div></div>`).join('');
+  return `<h3 style="font-size:15px;margin:8px 0">Мои заказы</h3>` + orderHistory.map(h => `<div class="card" style="margin-bottom:10px"><div class="sub">${h.date}</div><div>${h.items.join(', ')}</div><div class="price" style="margin-top:6px">${fmt(h.total)}</div>${h.snap ? `<button class="btn ghost block" style="margin-top:8px" data-act="reorder" data-i="${orderHistory.indexOf(h)}">Повторить заказ</button>` : ''}</div>`).join('');
 }
 function viewCart() {
   if (placed) return `<h2>Заказ оформлен</h2>
@@ -618,6 +619,11 @@ document.addEventListener('click', e => {
   }
   if (a === 'c-inc') { cart[i].qty++; saveCart(); render(true); return; }
   if (a === 'c-dec') { cart[i].qty--; if (cart[i].qty < 1) cart.splice(i, 1); saveCart(); render(true); return; }
+  if (a === 'reorder') {
+    const h = orderHistory[i]; if (!h || !h.snap) return;
+    h.snap.forEach(c => addToCart({...c}));
+    toast('Заказ добавлен в корзину'); render(true); return;
+  }
   if (a === 'c-del') { cart.splice(i, 1); saveCart(); render(true); return; }
   if (a === 'contact') { form.contact = b.dataset.v; errors = {}; render(true); return; }
   if (a === 'order') { submitOrder(); return; }
